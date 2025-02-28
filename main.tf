@@ -24,3 +24,10 @@ module "security_groups" {
   rds_sg_name        = var.rds_sg_name
   vpc_cidr           = var.vpc_cidr
 }
+
+module "alb" {
+  source            = "./modules/alb"
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = [module.subnets.public_subnet_1_id, module.subnets.public_subnet_2_id]
+  security_group_id = module.security_groups.alb_sg_id
+}
