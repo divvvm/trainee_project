@@ -22,7 +22,7 @@ variable "db_name" {
 variable "db_username" {
   description = "Username for the database"
   type        = string
-  default     = "admin"
+  default     = "denys"
 }
 
 variable "db_password" {
