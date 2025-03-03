@@ -38,7 +38,7 @@ resource "aws_autoscaling_group" "main" {
 
   launch_template {
     id      = aws_launch_template.asg.id
-    version = "$Latest" # Використовуємо найновішу версію шаблону
+    version = "$Latest"
   }
 
   tag {

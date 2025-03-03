@@ -37,3 +37,10 @@ module "ec2" {
   asg_sg_id            = module.security_groups.asg_sg_id
   alb_target_group_arn = module.alb.target_group_arn
 }
+
+module "rds" {
+  source            = "./modules/rds"
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_id = module.subnets.private_db_subnet_id
+  security_group_id = module.security_groups.rds_sg_id
+}
