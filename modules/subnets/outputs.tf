@@ -18,7 +18,12 @@ output "private_app_subnet_2_id" {
   value       = aws_subnet.private_app_2.id
 }
 
-output "private_db_subnet_id" {
-  description = "ID of private DB subnet for PostgreSQL"
-  value       = aws_subnet.private_db.id
+output "private_db_subnet_1_id" {
+  description = "ID of private DB subnet 1 for PostgreSQL"
+  value       = aws_subnet.private_db_1.id
+}
+
+output "private_db_subnet_2_id" {
+  description = "ID of private DB subnet 2 for PostgreSQL"
+  value       = aws_subnet.private_db_2.id
 }

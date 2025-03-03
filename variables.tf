@@ -18,8 +18,12 @@ variable "private_app_subnet_cidr_2" {
   default = "10.0.0.64/27"
 }
 
-variable "private_db_subnet_cidr" {
+variable "private_db_subnet_cidr_1" {
   default = "10.0.0.96/28"
+}
+
+variable "private_db_subnet_cidr_2" {
+  default = "10.0.0.112/28"
 }
 
 variable "bastion_ingress_ip" {

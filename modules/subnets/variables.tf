@@ -23,8 +23,13 @@ variable "private_app_subnet_cidr_2" {
   type        = string
 }
 
-variable "private_db_subnet_cidr" {
-  description = "CIDR block for private DB subnet (PostgreSQL)"
+variable "private_db_subnet_cidr_1" {
+  description = "CIDR block for private DB subnet 1 (PostgreSQL)"
+  type        = string
+}
+
+variable "private_db_subnet_cidr_2" {
+  description = "CIDR block for private DB subnet 2 (PostgreSQL)"
   type        = string
 }
 

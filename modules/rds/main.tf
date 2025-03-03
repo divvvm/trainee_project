@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "rds-subnet-group"
-  subnet_ids = [var.private_subnet_id]
+  subnet_ids = var.private_subnet_ids
 
   tags = {
     Name = "rds-subnet-group"

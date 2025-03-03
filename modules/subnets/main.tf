@@ -40,13 +40,23 @@ resource "aws_subnet" "private_app_2" {
   }
 }
 
-resource "aws_subnet" "private_db" {
+resource "aws_subnet" "private_db_1" {
   vpc_id            = var.vpc_id
-  cidr_block        = var.private_db_subnet_cidr
+  cidr_block        = var.private_db_subnet_cidr_1
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "private-db-subnet"
+    Name = "private-db-subnet_1"
+  }
+}
+
+resource "aws_subnet" "private_db_2" {
+  vpc_id            = var.vpc_id
+  cidr_block        = var.private_db_subnet_cidr_2
+  availability_zone = "us-east-1b"
+
+  tags = {
+    Name = "private-db-subnet_2"
   }
 }
 
