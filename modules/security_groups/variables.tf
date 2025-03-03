@@ -11,21 +11,25 @@ variable "bastion_ingress_ip" {
 variable "bastion_sg_name" {
   description = "Name of the Bastion security group"
   type        = string
+  default     = "bastion-sg"
 }
 
 variable "alb_sg_name" {
   description = "Name of the ALB security group"
   type        = string
+  default     = "alb-sg"
 }
 
 variable "asg_sg_name" {
   description = "Name of the ASG security group"
   type        = string
+  default     = "asg-sg"
 }
 
 variable "rds_sg_name" {
   description = "Name of the RDS security group"
   type        = string
+  default     = "rds-sg"
 }
 
 variable "vpc_cidr" {

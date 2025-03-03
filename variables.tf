@@ -25,19 +25,3 @@ variable "private_db_subnet_cidr" {
 variable "bastion_ingress_ip" {
   default = "0.0.0.0/0"
 }
-
-variable "bastion_sg_name" {
-  default = "bastion-sg"
-}
-
-variable "alb_sg_name" {
-  default = "alb-sg"
-}
-
-variable "asg_sg_name" {
-  default = "asg-sg"
-}
-
-variable "rds_sg_name" {
-  default = "rds-sg"
-}
