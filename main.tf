@@ -45,3 +45,15 @@ module "rds" {
   private_subnet_ids = [module.subnets.private_db_subnet_1_id, module.subnets.private_db_subnet_2_id]
   security_group_id  = module.security_groups.rds_sg_id
 }
+
+module "nat_gateway" {
+  source           = "./modules/nat_gateway"
+  vpc_id           = module.vpc.vpc_id
+  public_subnet_id = module.subnets.public_subnet_2_id
+  private_subnet_ids = [
+    module.subnets.private_app_subnet_1_id,
+    module.subnets.private_app_subnet_2_id,
+    module.subnets.private_db_subnet_1_id,
+    module.subnets.private_db_subnet_2_id
+  ]
+}
