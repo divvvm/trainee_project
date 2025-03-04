@@ -50,6 +50,13 @@ resource "aws_security_group" "asg" {
     cidr_blocks = [var.vpc_cidr]
   }
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/28"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
