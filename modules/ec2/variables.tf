@@ -29,8 +29,14 @@ variable "ami" {
   default     = "ami-0e1bed4f06a3b463d"
 }
 
-variable "instance_type" {
-  description = "Type of EC2 instance"
+variable "bastion_instance_type" {
+  description = "Type of Bastion instance"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "asg_instance_type" {
+  description = "Type of ASG instances"
   type        = string
   default     = "t3.xlarge"
 }
@@ -39,6 +45,12 @@ variable "key_name" {
   description = "Name of the SSH key for the Bastion"
   type        = string
   default     = "bastion-key"
+}
+
+variable "ebs_volume_size" {
+  description = "Size of the EBS volume for ASG instances"
+  type        = number
+  default     = 20
 }
 
 variable "desired_capacity" {

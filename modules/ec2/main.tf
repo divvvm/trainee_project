@@ -1,6 +1,6 @@
 resource "aws_instance" "bastion" {
   ami                         = var.ami
-  instance_type               = var.instance_type
+  instance_type               = var.bastion_instance_type
   key_name                    = var.key_name
   vpc_security_group_ids      = [var.bastion_sg_id]
   subnet_id                   = var.bastion_subnet_id
@@ -14,12 +14,21 @@ resource "aws_instance" "bastion" {
 resource "aws_launch_template" "asg" {
   name_prefix   = "asg-lt-"
   image_id      = var.ami
-  instance_type = var.instance_type
+  instance_type = var.asg_instance_type
   key_name      = var.key_name
   network_interfaces {
     associate_public_ip_address = false
     security_groups             = [var.asg_sg_id]
     subnet_id                   = element(var.private_subnet_ids, 0)
+  }
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size = var.ebs_volume_size
+      volume_type = "gp2"
+      delete_on_termination = true
+    }
   }
 
   tags = {
