@@ -31,23 +31,6 @@ resource "aws_launch_template" "asg" {
     }
   }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    apt-get update -y
-    apt-get install -y python3-pip curl
-    pip3 install flask
-
-    # Створення тимчасової директорії
-    mkdir -p /tmp
-
-    # Декодування app.py
-    echo "${filebase64("../flask_app/app.py")}" | base64 -d > /tmp/app.py
-
-    # Запуск Flask
-    python3 /tmp/app.py &
-    EOF
-  )
-
   tags = {
     Name = "asg-launch-template"
   }
