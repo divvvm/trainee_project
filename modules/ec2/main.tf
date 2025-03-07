@@ -47,7 +47,7 @@ resource "aws_launch_template" "asg" {
     python3 /tmp/app.py &
     EOF
   )
-  
+
   tags = {
     Name = "asg-launch-template"
   }
