@@ -50,7 +50,7 @@ variable "key_name" {
 variable "ebs_volume_size" {
   description = "Size of the EBS volume for ASG instances"
   type        = number
-  default     = 20
+  default     = 30
 }
 
 variable "desired_capacity" {
