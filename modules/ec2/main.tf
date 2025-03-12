@@ -56,3 +56,10 @@ resource "aws_autoscaling_group" "main" {
     propagate_at_launch = true
   }
 }
+
+data "aws_instances" "asg_instances" {
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [aws_autoscaling_group.main.name]
+  }
+}

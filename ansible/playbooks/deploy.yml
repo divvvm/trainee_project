@@ -1,0 +1,110 @@
+---
+- name: Deploy Flask server with Ollama on Ubuntu
+  hosts: webservers
+  become: yes  # Використовується для системних задач
+  vars:
+    app_path: /tmp/app.py
+    ollama_log: /home/ubuntu/ollama.log
+    flask_log: /home/ubuntu/flask.log
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - python3-pip
+          - curl
+        state: present
+
+    - name: Install Python dependencies
+      pip:
+        name:
+          - flask
+          - psycopg2-binary
+          - sentence-transformers
+          - requests
+          - numpy
+        executable: pip3
+
+    - name: Install Ollama
+      shell: curl -fsSL https://ollama.com/install.sh | sh
+      args:
+        creates: /usr/local/bin/ollama
+
+    - name: Pull llama3 model
+      become: false
+      shell: ollama pull llama3
+      args:
+        creates: /home/ubuntu/.ollama/models/blobs/sha256-6a0746a1ec1aef3e7ec53868f220ff6e389f6f8ef87a01d77c96807de94ca2aa
+      register: pull_result
+      failed_when: "'no space left on device' in pull_result.stderr"
+
+    - name: Stop and disable Ollama systemd service (if exists)
+      systemd:
+        name: ollama
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+
+    - name: Create Ollama systemd service
+      copy:
+        content: |
+          [Unit]
+          Description=Ollama Service
+          After=network.target
+          [Service]
+          ExecStart=/usr/local/bin/ollama serve
+          Restart=always
+          User=ubuntu
+          StandardOutput=append:/home/ubuntu/ollama.log
+          StandardError=append:/home/ubuntu/ollama.log
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/ollama.service
+        mode: '0644'
+      register: ollama_service
+
+    - name: Enable and start Ollama service
+      systemd:
+        name: ollama
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      when: ollama_service.changed
+
+    - name: Create Flask systemd service
+      copy:
+        content: |
+          [Unit]
+          Description=Flask Application Service
+          After=network.target ollama.service
+          [Service]
+          ExecStart=/usr/bin/python3 {{ app_path }}
+          Restart=always
+          User=ubuntu
+          StandardOutput=append:/home/ubuntu/flask.log
+          StandardError=append:/home/ubuntu/flask.log
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/flask.service
+        mode: '0644'
+      register: flask_service
+
+    - name: Deploy app.py
+      copy:
+        src: ../files/app.py
+        dest: "{{ app_path }}"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+      register: app_deployment
+
+    - name: Enable and start Flask service
+      systemd:
+        name: flask
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      when: flask_service.changed or app_deployment.changed
