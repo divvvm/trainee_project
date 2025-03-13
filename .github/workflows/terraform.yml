@@ -97,6 +97,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Debug directory structure
+      run: |
+        echo "Current directory: $(pwd)"
+        ls -la
+        find . -type f
+
     - name: Set up SSH
       run: |
         mkdir -p ~/.ssh
@@ -115,6 +121,12 @@ jobs:
 
     - name: Run Ansible Playbook
       run: |
+        echo "Current directory: $(pwd)"
+        ls -la
+        if [ ! -f playbooks/deploy.yml ]; then
+          echo "File playbooks/deploy.yml not found!"
+          exit 1
+        fi
         ansible-playbook -i inventory/dynamic.ini playbooks/deploy.yml
       env:
         ANSIBLE_HOST_KEY_CHECKING: False
