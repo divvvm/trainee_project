@@ -17,6 +17,9 @@ jobs:
       contents: read
       id-token: write
 
+    outputs:  # Визначаємо outputs для цього job
+      bastion_ip: ${{ steps.extract.outputs.bastion_ip }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -67,6 +70,7 @@ jobs:
       run: terraform refresh
 
     - name: Extract IP addresses from Terraform output
+      id: extract  # Додаємо id для цього кроку
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: |
         mkdir -p inventory
@@ -79,8 +83,8 @@ jobs:
         echo "Terraform output for bastion_public_ip:"
         terraform output -json bastion_public_ip
         BASTION_IP=$(terraform output -json bastion_public_ip | jq -r '.')
-        echo "BASTION_IP=$BASTION_IP" >> $GITHUB_ENV
         echo "Extracted BASTION_IP: $BASTION_IP"
+        echo "bastion_ip=$BASTION_IP" >> $GITHUB_OUTPUT  # Зберігаємо BASTION_IP як output
 
   ansible:
     name: 'Ansible Deployment'
@@ -96,11 +100,11 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/bastion-key.pem
         chmod 600 ~/.ssh/bastion-key.pem
-        if [ -z "${BASTION_IP}" ]; then
+        if [ -z "${{ needs.terraform.outputs.bastion_ip }}" ]; then
           echo "BASTION_IP is empty, exiting..."
           exit 1
         fi
-        ssh-keyscan -H ${BASTION_IP} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ needs.terraform.outputs.bastion_ip }} >> ~/.ssh/known_hosts
 
     - name: Install Ansible
       run: |
