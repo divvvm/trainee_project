@@ -1,7 +1,7 @@
 ---
 - name: Deploy Flask server with Ollama on Ubuntu
   hosts: webservers
-  become: yes  # Використовується для системних задач
+  become: yes
   vars:
     app_path: /tmp/app.py
     ollama_log: /home/ubuntu/ollama.log
