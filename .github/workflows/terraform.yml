@@ -63,7 +63,7 @@ jobs:
 
     - name: Wait for infrastructure to stabilize
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-      run: sleep 30
+      run: sleep 60  # Increased to 60s for stability
 
     - name: Terraform Refresh
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -73,7 +73,7 @@ jobs:
       id: extract
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: |
-        # Витягуємо IP бастіона спочатку
+        # Extract bastion IP
         BASTION_IP=$(terraform output -json bastion_public_ip | jq -r '.')
         if [ -z "$BASTION_IP" ]; then
           echo "BASTION_IP is empty, exiting..."
@@ -83,7 +83,7 @@ jobs:
         echo "bastion_ip=$BASTION_IP" >> $GITHUB_OUTPUT
         echo "Extracted BASTION_IP: $BASTION_IP"
 
-        # Витягуємо IP інстансів
+        # Extract webserver IPs
         WEBSERVER_IPS=$(terraform output -json webserver_ips | jq -r '.[]')
         if [ -z "$WEBSERVER_IPS" ]; then
           echo "No webserver IPs found, exiting..."
@@ -91,7 +91,7 @@ jobs:
         fi
         echo "WEBSERVER_IPS=$WEBSERVER_IPS"
 
-        # Генеруємо інвентар у ansible/inventory
+        # Generate Ansible inventory
         mkdir -p ansible/inventory
         echo "[webservers]" > ansible/inventory/dynamic.ini
         for ip in $WEBSERVER_IPS; do
@@ -99,6 +99,13 @@ jobs:
         done
         echo "Generated inventory file content:"
         cat ansible/inventory/dynamic.ini
+
+    - name: Upload Ansible Inventory
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      uses: actions/upload-artifact@v4
+      with:
+        name: ansible-inventory
+        path: ansible/inventory/dynamic.ini
 
   ansible:
     name: 'Ansible Deployment'
@@ -108,6 +115,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Download Ansible Inventory
+      uses: actions/download-artifact@v4
+      with:
+        name: ansible-inventory
+        path: ansible/inventory
 
     - name: Debug directory structure
       run: |
@@ -130,6 +143,11 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y ansible
+
+    - name: Check Ansible Inventory
+      run: |
+        echo "Ansible inventory content:"
+        cat ansible/inventory/dynamic.ini
 
     - name: Run Ansible Playbook
       run: |
