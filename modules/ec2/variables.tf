@@ -8,6 +8,11 @@ variable "bastion_subnet_id" {
   type        = string
 }
 
+variable "monitoring_subnet_id" {
+  description = "Public subnet ID where the monitoring instance will be deployed"
+  type        = string
+}
+
 variable "private_subnet_ids" {
   description = "List of IDs for private subnets for the ASG"
   type        = list(string)
@@ -15,6 +20,11 @@ variable "private_subnet_ids" {
 
 variable "bastion_sg_id" {
   description = "ID of the security group for the Bastion"
+  type        = string
+}
+
+variable "monitoring_sg_id" {
+  description = "Security group ID for the monitoring instance"
   type        = string
 }
 
@@ -31,6 +41,12 @@ variable "ami" {
 
 variable "bastion_instance_type" {
   description = "Type of Bastion instance"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "monitoring_instance_type" {
+  description = "Instance type for the monitoring instance"
   type        = string
   default     = "t3.micro"
 }

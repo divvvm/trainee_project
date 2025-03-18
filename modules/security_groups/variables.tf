@@ -32,6 +32,12 @@ variable "rds_sg_name" {
   default     = "rds-sg"
 }
 
+variable "monitoring_sg_name" {
+  description = "Name of the security group for the monitoring instance"
+  type        = string
+  default     = "monitoring-sg"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string

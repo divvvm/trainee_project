@@ -11,6 +11,27 @@ resource "aws_instance" "bastion" {
   }
 }
 
+resource "aws_instance" "monitoring" {
+  ami                         = var.ami
+  instance_type               = var.monitoring_instance_type
+  key_name                    = var.key_name
+  vpc_security_group_ids      = [var.monitoring_sg_id]
+  subnet_id                   = var.monitoring_subnet_id
+  associate_public_ip_address = true
+
+  root_block_device {
+    volume_size           = 20
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name        = "monitoring-instance"
+    Environment = "production"
+    Role        = "monitoring"
+  }
+}
+
 resource "aws_launch_template" "asg" {
   name_prefix   = "asg-lt-"
   image_id      = var.ami

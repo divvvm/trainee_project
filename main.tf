@@ -33,8 +33,10 @@ module "ec2" {
   source               = "./modules/ec2"
   vpc_id               = module.vpc.vpc_id
   bastion_subnet_id    = module.subnets.public_subnet_1_id
+  monitoring_subnet_id = module.subnets.public_subnet_2_id
   private_subnet_ids   = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
   bastion_sg_id        = module.security_groups.bastion_sg_id
+  monitoring_sg_id     = module.security_groups.monitoring_sg_id
   asg_sg_id            = module.security_groups.asg_sg_id
   alb_target_group_arn = module.alb.target_group_arn
 }
