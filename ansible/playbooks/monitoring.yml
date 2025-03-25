@@ -1,0 +1,5 @@
+- name: Configure monitoring instance
+  hosts: monitoring
+  become: yes
+  roles:
+    - monitoring

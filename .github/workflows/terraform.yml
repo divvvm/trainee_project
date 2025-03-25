@@ -19,6 +19,7 @@ jobs:
 
     outputs:
       bastion_ip: ${{ steps.extract.outputs.bastion_ip }}
+      monitoring_ip: ${{ steps.extract.outputs.monitoring_ip }}
 
     steps:
     - name: Checkout code
@@ -63,7 +64,7 @@ jobs:
 
     - name: Wait for infrastructure to stabilize
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-      run: sleep 60  # Increased to 60s for stability
+      run: sleep 60
 
     - name: Terraform Refresh
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -83,20 +84,36 @@ jobs:
         echo "bastion_ip=$BASTION_IP" >> $GITHUB_OUTPUT
         echo "Extracted BASTION_IP: $BASTION_IP"
 
-        # Extract webserver IPs
-        WEBSERVER_IPS=$(terraform output -json webserver_ips | jq -r '.[]')
-        if [ -z "$WEBSERVER_IPS" ]; then
-          echo "No webserver IPs found, exiting..."
+        # Extract monitoring IP
+        MONITORING_IP=$(terraform output -json monitoring_public_ip | jq -r '.')
+        if [ -z "$MONITORING_IP" ]; then
+          echo "MONITORING_IP is empty, exiting..."
           exit 1
         fi
-        echo "WEBSERVER_IPS=$WEBSERVER_IPS"
+        echo "MONITORING_IP=$MONITORING_IP" >> $GITHUB_ENV
+        echo "monitoring_ip=$MONITORING_IP" >> $GITHUB_OUTPUT
+        echo "Extracted MONITORING_IP: $MONITORING_IP"
+
+        # Extract LLM server IPs
+        LLM_SERVER_IPS=$(terraform output -json llm_server_ips | jq -r '.[]')
+        if [ -z "$LLM_SERVER_IPS" ]; then
+          echo "No LLM server IPs found, exiting..."
+          exit 1
+        fi
+        echo "LLM_SERVER_IPS=$LLM_SERVER_IPS"
 
         # Generate Ansible inventory
         mkdir -p ansible/inventory
-        echo "[webservers]" > ansible/inventory/dynamic.ini
-        for ip in $WEBSERVER_IPS; do
-          echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/bastion-key.pem ansible_ssh_common_args=\"-o ProxyCommand='ssh -W %h:%p -i ~/.ssh/bastion-key.pem ubuntu@$BASTION_IP'\"" >> ansible/inventory/dynamic.ini
+        echo "[llm_servers]" > ansible/inventory/dynamic.ini
+        i=1
+        for ip in $LLM_SERVER_IPS; do
+          echo "llm$i ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/bastion-key.pem ansible_ssh_common_args=\"-o ProxyCommand='ssh -W %h:%p -i ~/.ssh/bastion-key.pem ubuntu@$BASTION_IP'\"" >> ansible/inventory/dynamic.ini
+          i=$((i + 1))
         done
+
+        echo -e "\n[monitoring]" >> ansible/inventory/dynamic.ini
+        echo "monitor ansible_host=$MONITORING_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/bastion-key.pem" >> ansible/inventory/dynamic.ini
+
         echo "Generated inventory file content:"
         cat ansible/inventory/dynamic.ini
 
@@ -138,6 +155,7 @@ jobs:
           exit 1
         fi
         ssh-keyscan -H ${{ needs.terraform.outputs.bastion_ip }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ needs.terraform.outputs.monitoring_ip }} >> ~/.ssh/known_hosts
 
     - name: Install Ansible
       run: |
@@ -149,14 +167,26 @@ jobs:
         echo "Ansible inventory content:"
         cat ansible/inventory/dynamic.ini
 
-    - name: Run Ansible Playbook
+    - name: Run Ansible Playbook for LLM Servers
       run: |
         echo "Current directory: $(pwd)"
         ls -la
-        if [ ! -f ansible/playbooks/deploy.yml ]; then
-          echo "File ansible/playbooks/deploy.yml not found!"
+        if [ ! -f ansible/playbooks/llm_servers.yml ]; then
+          echo "File ansible/playbooks/llm_servers.yml not found!"
           exit 1
         fi
-        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/deploy.yml -v
+        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/llm_servers.yml -v --limit llm_servers
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: False
+
+    - name: Run Ansible Playbook for Monitoring
+      run: |
+        echo "Current directory: $(pwd)"
+        ls -la
+        if [ ! -f ansible/playbooks/monitoring.yml ]; then
+          echo "File ansible/playbooks/monitoring.yml not found!"
+          exit 1
+        fi
+        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/monitoring.yml -v --limit monitoring
       env:
         ANSIBLE_HOST_KEY_CHECKING: False

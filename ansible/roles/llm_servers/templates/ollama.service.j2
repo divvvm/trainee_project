@@ -1,0 +1,11 @@
+[Unit]
+Description=Ollama Service
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+Restart=always
+User=ubuntu
+StandardOutput=append:{{ ollama_log }}
+StandardError=append:{{ ollama_log }}
+[Install]
+WantedBy=multi-user.target

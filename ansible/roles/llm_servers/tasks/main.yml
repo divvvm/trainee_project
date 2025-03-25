@@ -1,0 +1,142 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: [setup]
+
+- name: Install required packages
+  apt:
+    name:
+      - python3-pip
+      - curl
+      - wget
+      - software-properties-common
+    state: present
+    update_cache: no
+  tags: [setup]
+
+- name: Install Python dependencies
+  pip:
+    name:
+      - flask
+      - psycopg2-binary
+      - sentence-transformers
+      - requests
+      - numpy
+    executable: pip3
+    state: present
+  tags: [setup]
+
+- name: Install Ollama
+  shell: curl -fsSL https://ollama.com/install.sh | sh
+  args:
+    creates: /usr/local/bin/ollama
+  tags: [ollama]
+
+- name: Pull llama3 model
+  become: false
+  shell: ollama pull llama3
+  args:
+    creates: /home/ubuntu/.ollama/models/blobs/sha256-6a0746a1ec1aef3e7ec53868f220ff6e389f6f8ef87a01d77c96807de94ca2aa
+  register: pull_result
+  failed_when: "'no space left on device' in pull_result.stderr"
+  tags: [ollama]
+
+- name: Stop and disable default Ollama service (if exists)
+  systemd:
+    name: ollama
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+  tags: [ollama]
+
+- name: Create Ollama systemd service
+  template:
+    src: ollama.service.j2
+    dest: /etc/systemd/system/ollama.service
+    mode: '0644'
+  register: ollama_service
+  tags: [ollama]
+
+- name: Enable and start Ollama service
+  systemd:
+    name: ollama
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: ollama_service.changed
+  tags: [ollama]
+
+- name: Deploy app.py
+  copy:
+    src: app.py
+    dest: "{{ app_path }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  register: app_deployment
+  tags: [flask]
+
+- name: Create Flask systemd service
+  template:
+    src: flask.service.j2
+    dest: /etc/systemd/system/flask.service
+    mode: '0644'
+  register: flask_service
+  tags: [flask]
+
+- name: Enable and start Flask service
+  systemd:
+    name: flask
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: flask_service.changed or app_deployment.changed
+  tags: [flask]
+
+- name: Add Grafana GPG key
+  shell: wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | tee /usr/share/keyrings/grafana-archive-keyring.gpg > /dev/null
+  args:
+    creates: /usr/share/keyrings/grafana-archive-keyring.gpg
+  tags: [alloy]
+
+- name: Add Grafana APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/grafana-archive-keyring.gpg] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  tags: [alloy]
+
+- name: Install Grafana Alloy
+  apt:
+    name: alloy
+    state: present
+    update_cache: yes
+  tags: [alloy]
+
+- name: Create Alloy configuration directory
+  file:
+    path: /etc/alloy
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [alloy]
+
+- name: Deploy Alloy configuration file
+  template:
+    src: alloy-config.river.j2
+    dest: /etc/alloy/config.alloy
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Alloy
+  tags: [alloy]
+
+- name: Enable and start Alloy service
+  systemd:
+    name: alloy
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  tags: [alloy]

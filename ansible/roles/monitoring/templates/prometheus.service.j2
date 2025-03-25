@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/prometheus/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/data --web.enable-remote-write-receiver
+Restart=always
+User=prometheus
+Group=prometheus
+
+[Install]
+WantedBy=multi-user.target

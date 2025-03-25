@@ -1,0 +1,114 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: [setup]
+
+- name: Install required packages
+  apt:
+    name:
+      - wget
+      - unzip
+      - curl
+    state: present
+    update_cache: no
+  tags: [setup]
+
+- name: Create Prometheus user
+  user:
+    name: "{{ prometheus_user }}"
+    shell: /sbin/nologin
+    create_home: no
+    system: yes
+  tags: [prometheus]
+
+- name: Create Prometheus data directory
+  file:
+    path: /data
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0755'
+  tags: [prometheus]
+
+- name: Download Prometheus
+  unarchive:
+    src: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /opt
+    remote_src: yes
+    creates: "/opt/prometheus-{{ prometheus_version }}.linux-amd64"
+  tags: [prometheus]
+
+- name: Move Prometheus binaries
+  copy:
+    src: "/opt/prometheus-{{ prometheus_version }}.linux-amd64/"
+    dest: /usr/local/bin/prometheus
+    remote_src: yes
+    directory_mode: yes
+  tags: [prometheus]
+
+- name: Set ownership for Prometheus binaries
+  file:
+    path: /usr/local/bin/prometheus
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0755'
+    recurse: yes
+  tags: [prometheus]
+
+- name: Create Prometheus config directory
+  file:
+    path: /etc/prometheus
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0755'
+  tags: [prometheus]
+
+- name: Configure Prometheus
+  template:
+    src: prometheus.yml.j2
+    dest: "{{ prometheus_config_path }}"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0644'
+  notify: Restart Prometheus
+  tags: [prometheus]
+
+- name: Create Prometheus systemd service
+  template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    mode: '0644'
+  notify: Restart Prometheus
+  tags: [prometheus]
+
+- name: Ensure Prometheus is running
+  systemd:
+    name: prometheus
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  tags: [prometheus]
+
+- name: Add Grafana repository
+  shell: |
+    wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
+    echo "deb https://packages.grafana.com/oss/deb stable main" > /etc/apt/sources.list.d/grafana.list
+    apt-get update
+  args:
+    creates: /etc/apt/sources.list.d/grafana.list
+  tags: [grafana]
+
+- name: Install Grafana
+  apt:
+    name: grafana
+    state: present
+  tags: [grafana]
+
+- name: Enable and start Grafana
+  systemd:
+    name: grafana-server
+    state: started
+    enabled: yes
+  tags: [grafana]

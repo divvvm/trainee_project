@@ -1,0 +1,6 @@
+prometheus_version: "2.47.0"
+grafana_port: 3000
+prometheus_user: "prometheus"
+prometheus_group: "prometheus"
+prometheus_binary_path: "/usr/local/bin/prometheus/prometheus"
+prometheus_config_path: "/etc/prometheus/prometheus.yml"

@@ -29,3 +29,12 @@ variable "private_db_subnet_cidr_2" {
 variable "bastion_ingress_ip" {
   default = "0.0.0.0/0"
 }
+
+variable "slack_webhook_url" {
+  default = "https://hooks.slack.com/services/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"
+}
+
+variable "lambda_role_arn" {
+  default = "arn:aws:iam::423623847730:role/lambda-slack-notifier-role"
+}
+

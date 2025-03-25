@@ -1,0 +1,5 @@
+- name: Configure LLM servers (Ollama)
+  import_playbook: llm_servers.yml
+
+- name: Configure monitoring instance
+  import_playbook: monitoring.yml

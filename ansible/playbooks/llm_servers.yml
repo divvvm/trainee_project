@@ -1,0 +1,5 @@
+- name: Configure LLM servers (Ollama)
+  hosts: llm_servers
+  become: yes
+  roles:
+    - llm_servers

@@ -59,3 +59,11 @@ module "nat_gateway" {
     module.subnets.private_db_subnet_2_id
   ]
 }
+
+module "monitoring" {
+  source            = "./modules/monitoring"
+  asg_identifier    = module.ec2.asg_name
+  rds_identifier    = module.rds.db_identifier
+  slack_webhook_url = var.slack_webhook_url
+  lambda_role_arn   = var.lambda_role_arn
+}

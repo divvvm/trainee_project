@@ -1,0 +1,13 @@
+prometheus.exporter.unix "default" {
+}
+
+prometheus.scrape "default" {
+  targets = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://{{ monitoring_instance_ip }}:9090/api/v1/write"
+  }
+}
