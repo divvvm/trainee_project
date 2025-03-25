@@ -1,4 +1,3 @@
 app_path: /tmp/app.py
 ollama_log: /home/ubuntu/ollama.log
 flask_log: /home/ubuntu/flask.log
-monitoring_instance_ip: "54.196.211.82"
