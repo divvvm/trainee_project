@@ -1,3 +1,6 @@
+- name: Configure database
+  import_playbook: database.yml
+
 - name: Configure LLM servers (Ollama)
   import_playbook: llm_servers.yml
 

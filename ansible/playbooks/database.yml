@@ -1,0 +1,4 @@
+- name: Initialize PostgreSQL database
+  hosts: monitoring
+  roles:
+    - database

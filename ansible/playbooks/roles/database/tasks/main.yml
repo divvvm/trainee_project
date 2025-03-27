@@ -1,0 +1,40 @@
+---
+- name: Install PostgreSQL client dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - libpq-dev
+    - python3-psycopg2
+  become: yes
+
+- name: Check if pgvector extension is already enabled
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    query: "SELECT 1 FROM pg_extension WHERE extname = 'vector';"
+  register: pgvector_check
+  ignore_errors: yes
+
+- name: Enable pgvector extension
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    query: "CREATE EXTENSION IF NOT EXISTS vector;"
+  when: pgvector_check.rowcount == 0
+
+- name: Create messages table
+  postgresql_query:
+    db: "{{ db_name }}"
+    login_host: "{{ db_host }}"
+    login_port: "{{ db_port }}"
+    login_user: "{{ db_user }}"
+    login_password: "{{ db_password }}"
+    query: "CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, message TEXT, response TEXT, embedding VECTOR(384));"

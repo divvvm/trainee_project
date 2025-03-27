@@ -1,0 +1,6 @@
+---
+db_name: "mydb"
+db_host: "postgres-llm.us-east-1.rds.amazonaws.com"
+db_port: 5432
+db_user: "denys"
+db_password: "password123"
