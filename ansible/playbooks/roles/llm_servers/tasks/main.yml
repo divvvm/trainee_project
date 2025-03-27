@@ -1,3 +1,4 @@
+---
 - name: Update apt cache
   apt:
     update_cache: yes
@@ -15,17 +16,25 @@
     update_cache: no
   tags: [setup]
 
-- name: Install Python dependencies
+- name: Install Python dependencies for FastAPI
   pip:
     name:
-      - flask
-      - psycopg2-binary
-      - sentence-transformers
+      - fastapi
+      - uvicorn
       - requests
-      - numpy
+      - psycopg2-binary
     executable: pip3
     state: present
-  tags: [setup]
+  tags: [fastapi]
+
+- name: Create log file for Ollama
+  file:
+    path: "{{ ollama_log }}"
+    state: touch
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  tags: [ollama]
 
 - name: Install Ollama
   shell: curl -fsSL https://ollama.com/install.sh | sh
@@ -67,32 +76,41 @@
   when: ollama_service.changed
   tags: [ollama]
 
-- name: Deploy app.py
+- name: Create log file for FastAPI
+  file:
+    path: "{{ fastapi_log }}"
+    state: touch
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+  tags: [fastapi]
+
+- name: Deploy FastAPI app (main.py)
   copy:
-    src: app.py
-    dest: "{{ app_path }}"
+    src: main.py
+    dest: "{{ app_path }}/main.py"
     owner: ubuntu
     group: ubuntu
     mode: '0644'
   register: app_deployment
-  tags: [flask]
+  tags: [fastapi]
 
-- name: Create Flask systemd service
+- name: Create FastAPI systemd service
   template:
-    src: flask.service.j2
-    dest: /etc/systemd/system/flask.service
+    src: fastapi.service.j2
+    dest: /etc/systemd/system/fastapi.service
     mode: '0644'
-  register: flask_service
-  tags: [flask]
+  register: fastapi_service
+  tags: [fastapi]
 
-- name: Enable and start Flask service
+- name: Enable and start FastAPI service
   systemd:
-    name: flask
+    name: fastapi
     enabled: yes
     state: started
     daemon_reload: yes
-  when: flask_service.changed or app_deployment.changed
-  tags: [flask]
+  when: fastapi_service.changed or app_deployment.changed
+  tags: [fastapi]
 
 - name: Add Grafana GPG key
   shell: wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | tee /usr/share/keyrings/grafana-archive-keyring.gpg > /dev/null

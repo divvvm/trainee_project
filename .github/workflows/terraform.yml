@@ -107,12 +107,12 @@ jobs:
         echo "[llm_servers]" > ansible/inventory/dynamic.ini
         i=1
         for ip in $LLM_SERVER_IPS; do
-          echo "llm$i ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/bastion-key.pem ansible_ssh_common_args=\"-o ProxyCommand='ssh -W %h:%p -i ~/.ssh/bastion-key.pem ubuntu@$BASTION_IP'\"" >> ansible/inventory/dynamic.ini
+          echo "llm$i ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=/mnt/c/Users/dmisi/.ssh/bastion-key.pem ansible_ssh_common_args=\"-o ProxyCommand='ssh -W %h:%p -i /mnt/c/Users/dmisi/.ssh/bastion-key.pem ubuntu@$BASTION_IP'\"" >> ansible/inventory/dynamic.ini
           i=$((i + 1))
         done
 
         echo -e "\n[monitoring]" >> ansible/inventory/dynamic.ini
-        echo "monitor ansible_host=$MONITORING_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/bastion-key.pem" >> ansible/inventory/dynamic.ini
+        echo "monitor ansible_host=$MONITORING_IP ansible_user=ubuntu ansible_ssh_private_key_file=/mnt/c/Users/dmisi/.ssh/bastion-key.pem" >> ansible/inventory/dynamic.ini
 
         echo "Generated inventory file content:"
         cat ansible/inventory/dynamic.ini
@@ -167,26 +167,14 @@ jobs:
         echo "Ansible inventory content:"
         cat ansible/inventory/dynamic.ini
 
-    - name: Run Ansible Playbook for LLM Servers
+    - name: Run Ansible Playbook (site.yml)
       run: |
         echo "Current directory: $(pwd)"
         ls -la
-        if [ ! -f ansible/playbooks/llm_servers.yml ]; then
-          echo "File ansible/playbooks/llm_servers.yml not found!"
+        if [ ! -f ansible/playbooks/site.yml ]; then
+          echo "File ansible/playbooks/site.yml not found!"
           exit 1
         fi
-        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/llm_servers.yml -v --limit llm_servers
-      env:
-        ANSIBLE_HOST_KEY_CHECKING: False
-
-    - name: Run Ansible Playbook for Monitoring
-      run: |
-        echo "Current directory: $(pwd)"
-        ls -la
-        if [ ! -f ansible/playbooks/monitoring.yml ]; then
-          echo "File ansible/playbooks/monitoring.yml not found!"
-          exit 1
-        fi
-        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/monitoring.yml -v --limit monitoring
+        ansible-playbook -i ansible/inventory/dynamic.ini ansible/playbooks/site.yml -v
       env:
         ANSIBLE_HOST_KEY_CHECKING: False

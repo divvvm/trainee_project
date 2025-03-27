@@ -1,3 +1,4 @@
-app_path: /tmp/app.py
-ollama_log: /home/ubuntu/ollama.log
-flask_log: /home/ubuntu/flask.log
+---
+app_path: "/opt/fastapi"
+ollama_log: "/var/log/ollama.log"
+fastapi_log: "/var/log/fastapi.log"
