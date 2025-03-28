@@ -6,7 +6,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 DB_CONFIG = {
-    "host": "postgres-llm.us-east-1.rds.amazonaws.com",
+    "host": "postgres-llm.cipiqwsk4k7o.us-east-1.rds.amazonaws.com",
     "port": 5432,
     "user": "denys",
     "password": "password123",
