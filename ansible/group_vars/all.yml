@@ -1,5 +1,5 @@
 prometheus_version: "2.47.0"
 grafana_port: 3000
-app_path: /tmp/app.py
-ollama_log: /home/ubuntu/ollama.log
-flask_log: /home/ubuntu/flask.log
+app_path: "/opt/fastapi"
+ollama_log: "/var/log/ollama.log"
+fastapi_log: "/var/log/fastapi.log"
