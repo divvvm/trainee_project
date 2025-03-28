@@ -85,6 +85,15 @@
     mode: '0644'
   tags: [fastapi]
 
+- name: Create directory for FastAPI app
+  file:
+    path: "{{ app_path }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  tags: [fastapi]
+
 - name: Deploy FastAPI app (main.py)
   copy:
     src: main.py
