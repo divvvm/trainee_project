@@ -8,6 +8,6 @@ prometheus.scrape "default" {
 
 prometheus.remote_write "default" {
   endpoint {
-    url = "http://{{ ansible_host }}:9090/api/v1/write"
+    url = "http://{{ hostvars[groups['monitoring'][0]]['ansible_host'] }}:9090/api/v1/write"
   }
 }
