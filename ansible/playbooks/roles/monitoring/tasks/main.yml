@@ -1,3 +1,4 @@
+---
 - name: Update apt cache
   apt:
     update_cache: yes
@@ -10,9 +11,20 @@
       - wget
       - unzip
       - curl
+      - nginx
+      - software-properties-common
+      - docker.io
     state: present
     update_cache: no
   tags: [setup]
+
+- name: Add ubuntu user to docker group
+  user:
+    name: ubuntu
+    groups: docker
+    append: yes
+  become: yes
+  tags: [docker]
 
 - name: Create Prometheus user
   user:
@@ -112,3 +124,90 @@
     state: started
     enabled: yes
   tags: [grafana]
+
+- name: Create Nginx log directory
+  file:
+    path: /var/log/nginx
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nginx]
+
+- name: Create Nginx log files
+  file:
+    path: /var/log/nginx/{{ item }}
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - access.log
+    - error.log
+  tags: [nginx]
+
+- name: Create Nginx configuration directory
+  file:
+    path: /etc/nginx/sites-available
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: [nginx]
+
+- name: Configure Nginx
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Nginx
+  tags: [nginx]
+
+- name: Create symbolic link for Nginx configuration
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: Restart Nginx
+  tags: [nginx]
+
+- name: Create Nginx systemd service
+  template:
+    src: nginx.service.j2
+    dest: /etc/systemd/system/nginx.service
+    mode: '0644'
+  notify: Restart Nginx
+  tags: [nginx]
+
+- name: Ensure Nginx is running
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  tags: [nginx]
+
+- name: Create directory for Open WebUI data
+  file:
+    path: /opt/openwebui
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  tags: [openwebui]
+
+- name: Run Open WebUI Docker container
+  docker_container:
+    name: "{{ docker_openwebui.name }}"
+    image: "{{ docker_openwebui.image }}"
+    state: "{{ docker_openwebui.state }}"
+    restart_policy: "{{ docker_openwebui.restart_policy }}"
+    ports: "{{ docker_openwebui.ports }}"
+    volumes: "{{ docker_openwebui.volumes }}"
+    env: "{{ docker_openwebui.env }}"
+  vars:
+    docker_openwebui: "{{ lookup('template', 'docker-openwebui.yml.j2') | from_yaml }}"
+  become: yes
+  tags: [openwebui]

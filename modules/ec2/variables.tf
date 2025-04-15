@@ -48,7 +48,7 @@ variable "bastion_instance_type" {
 variable "monitoring_instance_type" {
   description = "Instance type for the monitoring instance"
   type        = string
-  default     = "t3.micro"
+  default     = "t3.xlarge"
 }
 
 variable "asg_instance_type" {

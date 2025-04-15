@@ -16,17 +16,6 @@
     update_cache: no
   tags: [setup]
 
-- name: Install Python dependencies for FastAPI
-  pip:
-    name:
-      - fastapi
-      - uvicorn
-      - requests
-      - psycopg2-binary
-    executable: pip3
-    state: present
-  tags: [fastapi]
-
 - name: Create log file for Ollama
   file:
     path: "{{ ollama_log }}"
@@ -75,51 +64,6 @@
     daemon_reload: yes
   when: ollama_service.changed
   tags: [ollama]
-
-- name: Create log file for FastAPI
-  file:
-    path: "{{ fastapi_log }}"
-    state: touch
-    owner: ubuntu
-    group: ubuntu
-    mode: '0644'
-  tags: [fastapi]
-
-- name: Create directory for FastAPI app
-  file:
-    path: "{{ app_path }}"
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    mode: '0755'
-  tags: [fastapi]
-
-- name: Deploy FastAPI app (main.py)
-  copy:
-    src: main.py
-    dest: "{{ app_path }}/main.py"
-    owner: ubuntu
-    group: ubuntu
-    mode: '0644'
-  register: app_deployment
-  tags: [fastapi]
-
-- name: Create FastAPI systemd service
-  template:
-    src: fastapi.service.j2
-    dest: /etc/systemd/system/fastapi.service
-    mode: '0644'
-  register: fastapi_service
-  tags: [fastapi]
-
-- name: Enable and start FastAPI service
-  systemd:
-    name: fastapi
-    enabled: yes
-    state: started
-    daemon_reload: yes
-  when: fastapi_service.changed or app_deployment.changed
-  tags: [fastapi]
 
 - name: Add Grafana GPG key
   shell: wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | tee /usr/share/keyrings/grafana-archive-keyring.gpg > /dev/null

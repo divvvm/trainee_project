@@ -12,13 +12,13 @@ resource "aws_lb" "main" {
 
 resource "aws_lb_target_group" "main" {
   name        = var.target_group_name
-  port        = 5000
+  port        = 8000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "instance"
 
   health_check {
-    path                = "/ask"
+    path                = "/health"
     protocol            = "HTTP"
     matcher             = "200"
     interval            = 30

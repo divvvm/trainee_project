@@ -1,0 +1,13 @@
+[Unit]
+Description=Nginx Service
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/nginx -g 'daemon off;'
+Restart=always
+User=root
+StandardOutput=append:{{ nginx_log }}
+StandardError=append:{{ nginx_log }}
+
+[Install]
+WantedBy=multi-user.target

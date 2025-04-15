@@ -3,3 +3,4 @@ grafana_port: 3000
 app_path: "/opt/fastapi"
 ollama_log: "/var/log/ollama.log"
 fastapi_log: "/var/log/fastapi.log"
+alb_dns_name: "my-alb-293216232.us-east-1.elb.amazonaws.com"

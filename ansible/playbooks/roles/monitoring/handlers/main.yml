@@ -1,4 +1,15 @@
+---
 - name: Restart Prometheus
   systemd:
     name: prometheus
+    state: restarted
+
+- name: Restart Nginx
+  systemd:
+    name: nginx
+    state: restarted
+
+- name: Restart Open WebUI
+  systemd:
+    name: openwebui
     state: restarted
