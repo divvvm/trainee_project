@@ -1,6 +1,8 @@
 prometheus_version: "2.47.0"
 grafana_port: 3000
-app_path: "/opt/fastapi"
 ollama_log: "/var/log/ollama.log"
-fastapi_log: "/var/log/fastapi.log"
-alb_dns_name: "my-alb-293216232.us-east-1.elb.amazonaws.com"
+db_name: "mydb"
+db_host: "postgres-llm.cipiqwsk4k7o.us-east-1.rds.amazonaws.com"
+db_port: 5432
+db_user: "denys"
+db_password: "password123"
